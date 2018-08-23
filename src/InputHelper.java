@@ -17,9 +17,7 @@ public class InputHelper {
     }
 
     public static double getDoubleInput(String prompt) throws NumberFormatException {
-
         String input = getInput(prompt);
         return Double.parseDouble(input);
-
     }
 }

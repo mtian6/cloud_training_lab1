@@ -61,7 +61,6 @@ public class DBUtil {
         }
 
         try {
-
             //Note: removed last "+0000" from date, otherwise invalid date format
             for (int i = 0; i < stocks.size() - 1; i++) {
                 stock = (JSONObject) stocks.get(i);
