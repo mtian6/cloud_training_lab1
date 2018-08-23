@@ -18,7 +18,7 @@ public class Main {
 
     private static Stock_info table = new Stock_info();
 
-    private static final String DATE = "2018-06-22";
+    private static final String DATE = "2018-06-25";
 
 
     public static void main(String[] args) throws Exception{
@@ -40,9 +40,8 @@ public class Main {
             conn = DBUtil.getConnection();
             stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
-            DBUtil.createDatabase(stmt, DATABASE_NAME);
-            DBUtil.useDatabase(stmt, DATABASE_NAME);
-            DBUtil.createTable(stmt, table_name);
+            DBUtil.createAndUseDatabase(stmt, DATABASE_NAME);
+            //DBUtil.createTable(stmt, table_name);
 
         } catch (SQLException e) {
             DBUtil.processException(e);
@@ -51,7 +50,7 @@ public class Main {
         }
 
 
-        DBUtil.insertToTable(stmt, table_name, stocks);
+        //DBUtil.insertToTable(stmt, table_name, stocks);
 
         Map symbol_map = storeQueryResults(stmt);
         for (Object key: symbol_map.keySet()) System.out.println(key + "-" + symbol_map.get(key)); // print stored key-value map
@@ -76,17 +75,9 @@ public class Main {
     public static Map storeQueryResults(Statement stmt) throws SQLException {
         Map symbol_map = new HashMap();
 
-        String q1 = table.getHighestPriceForGivenDate("all", DATE);
+        String q1 = table.getMaxMinAndVolumeForGivenDate("all", DATE);
         ResultSet rs1 = stmt.executeQuery(q1);
-        symbol_map = table.storeResults(rs1, "max", symbol_map, DATE);
-
-        String q2 = table.getLowestPriceForGivenDate("all", DATE);
-        ResultSet rs2 = stmt.executeQuery(q2);
-        symbol_map = table.storeResults(rs2, "min", symbol_map, DATE);
-
-        String q3 = table.getTotalVolumeTradedForGivenDate("all", DATE);
-        ResultSet rs3 = stmt.executeQuery(q3);
-        symbol_map = table.storeResults(rs3, "total", symbol_map, DATE);
+        symbol_map = table.storeResults(rs1, "maxmin", symbol_map, DATE);
 
         String q4 = table.getClosingPriceForGivenDate("all", DATE);
         ResultSet rs4 = stmt.executeQuery(q4);
@@ -98,20 +89,14 @@ public class Main {
     public static void processUserCommands(Statement stmt) {
         try {
             String method = InputHelper.getInput("For a given date, do you want to find\n" +
-                    "(max) max stock price\n" +
-                    "(min) min stock price\n" +
-                    "(total) total number of trades\n" +
+                    "(maxmin) max and min stock price\n" +
                     "(closing) closing price?\n");
             String name = InputHelper.getInput("Enter stock symbol (or 'all'): ");
             String date = InputHelper.getInput("Enter a date (yyyy-mm-dd): ");
 
             String q = null;
-            if (method.equals("max")){
-                q = table.getHighestPriceForGivenDate(name, date);
-            } else if (method.equals("min")) {
-                q = table.getLowestPriceForGivenDate(name, date);
-            } else if (method.equals("total")) {
-                q = table.getTotalVolumeTradedForGivenDate(name, date);
+            if (method.equals("maxmin")){
+                q = table.getMaxMinAndVolumeForGivenDate(name, date);
             } else if (method.equals("closing")) {
                 q = table.getClosingPriceForGivenDate(name, date);
             }

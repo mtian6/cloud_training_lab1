@@ -1,10 +1,11 @@
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 
 public class DBUtil {
@@ -22,36 +23,29 @@ public class DBUtil {
         System.err.println("SQL state: " + e.getSQLState());
     }
 
-    public static void createDatabase(Statement stmt, String database_name) {
-        String query = "create database if not exists " + database_name + ";";
+    public static void createAndUseDatabase(Statement stmt, String database_name) {
+        String createDB = "create database if not exists " + database_name + ";";
+        String useDB = "use " + database_name + ";";
         try {
-            int rs = stmt.executeUpdate(query);
-        } catch (SQLException e) {
-            processException(e);
-        }
-    }
-
-    public static void useDatabase(Statement stmt, String database_name) {
-        String query = "use " + database_name + ";";
-        try {
-            int rs = stmt.executeUpdate(query);
+            stmt.executeUpdate(createDB);
+            stmt.executeUpdate(useDB);
         } catch (SQLException e) {
             processException(e);
         }
     }
 
     public static void createTable(Statement stmt, String table_name) {
-        String query1 = "drop table if exists " + table_name + ";";
-        String query2 = "create table " + table_name + " (id INTEGER AUTO_INCREMENT, volume INTEGER, date DATE, symbol VARCHAR(20), price DECIMAL(19,2), PRIMARY KEY (id));";
+        String drop_table = "drop table if exists " + table_name + ";";
+        String create_table = "create table " + table_name + " (id INTEGER AUTO_INCREMENT, volume INTEGER, date DATETIME, symbol VARCHAR(20), price DECIMAL(19,2), PRIMARY KEY (id));";
         try {
-            int rs1 = stmt.executeUpdate(query1);
-            int rs2 = stmt.executeUpdate(query2);
+            stmt.executeUpdate(drop_table);
+            stmt.executeUpdate(create_table);
         } catch (SQLException e) {
             processException(e);
         }
     }
 
-    public static void insertToTable(Statement stmt, String table_name, JSONArray stocks) {
+    public static void insertToTable(Statement stmt, String table_name, JSONArray stocks) throws ParseException{
         String query = "insert into " + table_name + " (volume, date, symbol, price) values ";
         JSONObject stock;
 
@@ -60,8 +54,11 @@ public class DBUtil {
             return;
         }
 
+        //SimpleDateFormat timeformatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        //timeformatter.setTimeZone(TimeZone.getTimeZone("UTC-5"));
+
         try {
-            //Note: removed last "+0000" from date, otherwise invalid date format
+            //Note: removed timezone "+0000" from date, otherwise invalid date format
             for (int i = 0; i < stocks.size() - 1; i++) {
                 stock = (JSONObject) stocks.get(i);
                 query = query + "(" + stock.get("volume") + ", " + "\"" + stock.get("date").toString().split("\\+")[0] + "\"" +

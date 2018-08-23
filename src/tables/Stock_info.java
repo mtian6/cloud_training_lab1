@@ -32,24 +32,15 @@ public class Stock_info {
                 symbol_map.put(sym, new HashMap());
             }
             Map items_map = (Map)symbol_map.get(sym);
-            if (method == "max") {
-                items_map.put("max_price", rs.getString("price"));
-            } else if (method == "min") {
-                items_map.put("min_price", rs.getString("price"));
-            } else if (method == "total") {
+            if (method == "maxmin") {
+                items_map.put("max_price", rs.getString("max_price"));
+                items_map.put("min_price", rs.getString("min_price"));
                 items_map.put("total_volume", rs.getString("total"));
             } else if (method == "closing") {
                 items_map.put("closing_price_day", rs.getString("closing_price_day"));
                 items_map.put("closing_price_month", rs.getString("closing_price_month"));
             }
             items_map.put("date", date);
-//            if (hasColumn(rs, "price")) {
-//                Map items_map = (Map)symbol_map.get(sym);
-//                items_map.put("price", rs.getString("price"));
-//            } else if (hasColumn(rs, "total")) {
-//                Map items_map = (Map)symbol_map.get(sym);
-//                items_map.put("total", rs.getString("total"));
-//            }
         }
         return symbol_map;
     }
@@ -72,13 +63,17 @@ public class Stock_info {
             buffer.append(sym);
 
             NumberFormat nf = NumberFormat.getCurrencyInstance();
-            if (hasColumn(rs, "price")) {
-                String formattedPrice = nf.format(rs.getDouble("price"));
-                buffer.append(" (" + formattedPrice + ")");
+            if (hasColumn(rs, "max_price")) {
+                String formattedPrice = nf.format(rs.getDouble("max_price"));
+                buffer.append(" (max " + formattedPrice + ")");
+            }
+            if (hasColumn(rs, "min_price")) {
+                String formattedPrice = nf.format(rs.getDouble("min_price"));
+                buffer.append(" (min " + formattedPrice + ")");
             }
             if (hasColumn(rs, "total")) {
                 Double totalVolume = rs.getDouble("total");
-                buffer.append(" (" + totalVolume + ")");
+                buffer.append(" (total volume " + totalVolume + ")");
             }
             if (hasColumn(rs, "closing_price_month")) {
                 String formattedPrice = nf.format(rs.getDouble("closing_price_month"));
@@ -94,10 +89,10 @@ public class Stock_info {
         }
     }
 
-    public static boolean hasColumn(ResultSet rs, String columnName) throws SQLException {
+    public static boolean hasColumn(ResultSet rs, String column_name) throws SQLException {
         try
         {
-            rs.findColumn(columnName);
+            rs.findColumn(column_name);
             return true;
         } catch (SQLException e)
         {
@@ -117,55 +112,33 @@ public class Stock_info {
 //        System.out.println(rs.getInt("total"));
 //    }
 
-    public static String getHighestPriceForGivenDate(String stock_symbol, String date) {
+    public static String getMaxMinAndVolumeForGivenDate(String stock_symbol, String date) {
         //String query = "select symbol, price from " + TABLE_NAME +  " where price = (select max(price) from stock_info where date = '" + date + "');";
         String query;
         if (stock_symbol.equals("all")) {
-            query = "select symbol, max(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol;"; //max price for given day for each stock symbol; "
+            query = "select symbol, max(price) as max_price, min(price) as min_price, sum(volume) as total from " + TABLE_NAME + " where date like '" + date + "%' group by symbol;";
         } else {
-            query = "select t2.symbol, t2.price from (select symbol, max(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol) as t2 where symbol = '" + stock_symbol + "';";
+            query = "select t2.symbol, t2.max_price, t2.min_price, t2.total from " +
+                    "(select symbol, max(price) as max_price, min(price) as min_price, sum(volume) as total from " + TABLE_NAME + " where date like '" + date + "%' group by symbol) " +
+                    "as t2 where symbol = '" + stock_symbol + "';";
         }
         return query;
     }
 
-    public static String getLowestPriceForGivenDate(String stock_symbol, String date) {
-        //String query = "select symbol, price from " + TABLE_NAME +  "  where price = (select min(price) from stock_info where date = '" + date + "');";
-        String query;
-        if (stock_symbol.equals("all")) {
-            query = "select symbol, min(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol;"; //min price for given day for each stock symbol; "
-        } else {
-            query = "select t2.symbol, t2.price from (select symbol, min(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol) as t2 where symbol = '" + stock_symbol + "';";
-        }
-        return query;
-    }
-
-    public static String getTotalVolumeTradedForGivenDate(String stock_symbol, String date) {
-        String query;
-        if (stock_symbol.equals("all")) {
-            query = "select symbol, sum(volume) as total from " + TABLE_NAME + " where date = '" + date + "' group by symbol;";
-        } else {
-            query = "select symbol, sum(volume) as total from " + TABLE_NAME + " where date = '" + date + "' and symbol = '" + stock_symbol + "';";
-        }
-        return query;
-    }
 
     public static String getClosingPriceForGivenDate(String stock_symbol, String date) {
         String query;
         if (stock_symbol.equals("all")) {
-            query = "select t1.symbol, t1.price as closing_price_month, t2.price as closing_price_day from " +
-                    "(select " + TABLE_NAME + ".symbol, price from " + TABLE_NAME +
-                    " join (select symbol, max(id) as maxid from " + TABLE_NAME +
-                    " where date like '" + date.substring(0,7) + "%' group by symbol)" +
-                    " as t2 where stock_info.id = t2.maxid) as t1 join " +
-                    "(select " + TABLE_NAME + ".symbol, price from " + TABLE_NAME +
-                    " join (select symbol, max(id) as maxid from " + TABLE_NAME +
-                    " where date = '" + date + "' group by symbol)" +
-                    " as t2 where stock_info.id = t2.maxid) as t2 where t1.symbol = t2.symbol;";
+            query = "select t1.symbol, t1.price as closing_price_day, t2.price as closing_price_month from " +
+                    "(select symbol, price from " + TABLE_NAME + " where date = (select max(date) from " + TABLE_NAME + " where date like '" + date + "%')) as t1 " +
+                    "join " +
+                    "(select symbol, price from " + TABLE_NAME + " where date = (select max(date) from " + TABLE_NAME + " where date like '" + date.substring(0,7) + "%') ) as t2 " +
+                    "where t1.symbol = t2.symbol;";
         } else {
-            query = "select t3.symbol, t3.price from (select " + TABLE_NAME + ".symbol, price from " + TABLE_NAME +
-                    " join (select symbol, max(id) as maxid from " + TABLE_NAME +
-                    " where date = '" + date + "' group by symbol)" +
-                    " as t2 where stock_info.id = t2.maxid) as t3 where t3.symbol = '" + stock_symbol + "';";
+            query = "select t1.symbol, t1.price as closing_price_month, t2.price as closing_price_day from " +
+                    "(select symbol, price from " + TABLE_NAME + " where id = (select max(id) from " + TABLE_NAME + " where symbol = '" + stock_symbol + "' and date like '" + date.substring(0,7) + "%')) as t1 " +
+                    "join (select symbol, price from " + TABLE_NAME + " where id = (select max(id) from " + TABLE_NAME + " where symbol = '" + stock_symbol + "' and date like '" + date + "%')) as t2 " +
+                    "on t1.symbol = t2.symbol;";
         }
         return query;
     }
