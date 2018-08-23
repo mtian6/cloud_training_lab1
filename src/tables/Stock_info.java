@@ -117,41 +117,41 @@ public class Stock_info {
 //        System.out.println(rs.getInt("total"));
 //    }
 
-    public static String getHighestPriceForGivenDate(String name, String date) {
+    public static String getHighestPriceForGivenDate(String stock_symbol, String date) {
         //String query = "select symbol, price from " + TABLE_NAME +  " where price = (select max(price) from stock_info where date = '" + date + "');";
         String query;
-        if (name.equals("all")) {
+        if (stock_symbol.equals("all")) {
             query = "select symbol, max(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol;"; //max price for given day for each stock symbol; "
         } else {
-            query = "select t2.symbol, t2.price from (select symbol, max(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol) as t2 where symbol = '" + name + "';";
+            query = "select t2.symbol, t2.price from (select symbol, max(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol) as t2 where symbol = '" + stock_symbol + "';";
         }
         return query;
     }
 
-    public static String getLowestPriceForGivenDate(String name, String date) {
+    public static String getLowestPriceForGivenDate(String stock_symbol, String date) {
         //String query = "select symbol, price from " + TABLE_NAME +  "  where price = (select min(price) from stock_info where date = '" + date + "');";
         String query;
-        if (name.equals("all")) {
+        if (stock_symbol.equals("all")) {
             query = "select symbol, min(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol;"; //min price for given day for each stock symbol; "
         } else {
-            query = "select t2.symbol, t2.price from (select symbol, min(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol) as t2 where symbol = '" + name + "';";
+            query = "select t2.symbol, t2.price from (select symbol, min(price) as price from " + TABLE_NAME + " where date = '" + date + "' group by symbol) as t2 where symbol = '" + stock_symbol + "';";
         }
         return query;
     }
 
-    public static String getTotalVolumeTradedForGivenDate(String name, String date) {
+    public static String getTotalVolumeTradedForGivenDate(String stock_symbol, String date) {
         String query;
-        if (name.equals("all")) {
+        if (stock_symbol.equals("all")) {
             query = "select symbol, sum(volume) as total from " + TABLE_NAME + " where date = '" + date + "' group by symbol;";
         } else {
-            query = "select symbol, sum(volume) as total from " + TABLE_NAME + " where date = '" + date + "' and symbol = '" + name + "';";
+            query = "select symbol, sum(volume) as total from " + TABLE_NAME + " where date = '" + date + "' and symbol = '" + stock_symbol + "';";
         }
         return query;
     }
 
-    public static String getClosingPriceForGivenDate(String name, String date) {
+    public static String getClosingPriceForGivenDate(String stock_symbol, String date) {
         String query;
-        if (name.equals("all")) {
+        if (stock_symbol.equals("all")) {
             query = "select t1.symbol, t1.price as closing_price_month, t2.price as closing_price_day from " +
                     "(select " + TABLE_NAME + ".symbol, price from " + TABLE_NAME +
                     " join (select symbol, max(id) as maxid from " + TABLE_NAME +
@@ -165,7 +165,7 @@ public class Stock_info {
             query = "select t3.symbol, t3.price from (select " + TABLE_NAME + ".symbol, price from " + TABLE_NAME +
                     " join (select symbol, max(id) as maxid from " + TABLE_NAME +
                     " where date = '" + date + "' group by symbol)" +
-                    " as t2 where stock_info.id = t2.maxid) as t3 where t3.symbol = '" + name + "';";
+                    " as t2 where stock_info.id = t2.maxid) as t3 where t3.symbol = '" + stock_symbol + "';";
         }
         return query;
     }
