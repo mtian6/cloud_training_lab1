@@ -45,21 +45,6 @@ public class DBUtil {
         }
     }
 
-    /**
-     * Creates a new table (drops old table if already exists).
-     * @param stmt
-     * @param table_name
-     */
-    public static void createTable(Statement stmt, String table_name) {
-        String drop_table = "drop table if exists " + table_name + ";";
-        String create_table = "create table " + table_name + " (id INTEGER AUTO_INCREMENT, volume INTEGER, date DATETIME, symbol VARCHAR(20), price DECIMAL(19,2), PRIMARY KEY (id));";
-        try {
-            stmt.executeUpdate(drop_table);
-            stmt.executeUpdate(create_table);
-        } catch (SQLException e) {
-            processException(e);
-        }
-    }
 
     /**
      * Inserts data into a table.

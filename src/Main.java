@@ -35,7 +35,7 @@ public class Main {
             stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
             DBUtil.createAndUseDatabase(stmt, DATABASE_NAME);
-            DBUtil.createTable(stmt, table_name);
+            table.createTable(stmt, table_name);
 
         } catch (SQLException e) {
             DBUtil.processException(e);

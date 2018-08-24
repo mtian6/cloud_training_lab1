@@ -24,6 +24,22 @@ public class Stock_info {
     }
 
     /**
+     * Creates a new table (drops old table if already exists).
+     * @param stmt
+     * @param table_name
+     */
+    public static void createTable(Statement stmt, String table_name) {
+        String drop_table = "drop table if exists " + table_name + ";";
+        String create_table = "create table " + table_name + " (id INTEGER AUTO_INCREMENT, " + VOLUME + " INTEGER, " + DATE + " DATETIME, " + SYMBOL + " VARCHAR(20), " + PRICE + " DECIMAL(19,2), PRIMARY KEY (id));";
+        try {
+            stmt.executeUpdate(drop_table);
+            stmt.executeUpdate(create_table);
+        } catch (SQLException e) {
+            System.err.println(e);
+        }
+    }
+
+    /**
      * Stores result of the query in a Map.
      * @param rs
      * @param day_or_month Either "day" or "month" depending on the sql query given.
