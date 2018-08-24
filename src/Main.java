@@ -80,5 +80,4 @@ public class Main {
         return stocks;
     }
 
-
 }

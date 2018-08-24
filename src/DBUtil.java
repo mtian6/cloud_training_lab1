@@ -62,7 +62,7 @@ public class DBUtil {
     }
 
     /**
-     * Inserts data into table.
+     * Inserts data into a table.
      * @param stmt
      * @param query
      */

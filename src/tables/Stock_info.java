@@ -13,6 +13,12 @@ public class Stock_info {
 
     private static final String TABLE_NAME = "stock_info";
 
+    private static final String VOLUME = "volume";
+    private static final String DATE = "date";
+    private static final String SYMBOL = "symbol";
+    private static final String PRICE = "price";
+
+
     public static String getTableName() {
         return TABLE_NAME;
     }
@@ -93,7 +99,7 @@ public class Stock_info {
      * @return The query string ready to be executed.
      */
     public static String getInsertionQuery(String table_name, JSONArray stocks) {
-        String query = "insert into " + table_name + " (volume, date, symbol, price) values ";
+        String query = "insert into " + table_name + " (" + VOLUME + " ," + DATE + ", " + SYMBOL + ", " + PRICE + ") values ";
 
         JSONObject stock;
 
@@ -103,12 +109,12 @@ public class Stock_info {
         //Note: removed timezone "+0000" from date, otherwise invalid date format
         for (int i = 0; i < stocks.size() - 1; i++) {
             stock = (JSONObject) stocks.get(i);
-            query = query + "(" + stock.get("volume") + ", " + "\"" + stock.get("date").toString().split("\\+")[0] + "\"" +
-                    ", " + "\"" + stock.get("symbol") + "\"" + ", " + stock.get("price") + "), ";
+            query = query + "(" + stock.get(VOLUME) + ", " + "\"" + stock.get(DATE).toString().split("\\+")[0] + "\"" +
+                    ", " + "\"" + stock.get(SYMBOL) + "\"" + ", " + stock.get(PRICE) + "), ";
         }
         stock = (JSONObject) stocks.get(stocks.size() - 1);
-        query = query + "(" + stock.get("volume") + ", " + "\"" + stock.get("date").toString().split("\\+")[0] + "\"" +
-                ", " + "\"" + stock.get("symbol") + "\"" + ", " + stock.get("price") + ");";
+        query = query + "(" + stock.get(VOLUME) + ", " + "\"" + stock.get(DATE).toString().split("\\+")[0] + "\"" +
+                ", " + "\"" + stock.get(SYMBOL) + "\"" + ", " + stock.get(PRICE) + ");";
 
         return query;
     }
@@ -122,9 +128,11 @@ public class Stock_info {
     public static String getMaxMinAndVolumeForGivenDate(String day_or_month, String date) {
         String query = null;
         if (day_or_month.equals("day")) {
-            query = "select symbol, max(price) as max_price, min(price) as min_price, sum(volume) as total from " + TABLE_NAME + " where date like '" + date + "%' group by symbol;";
+            query = "select " + SYMBOL + ", max(" + PRICE + ") as max_price, min(" + PRICE + ") as min_price, sum(" + VOLUME + ") as total " +
+                    "from " + TABLE_NAME + " where " + DATE + " like '" + date + "%' group by " + SYMBOL + ";";
         } else if (day_or_month.equals("month")) {
-            query = "select symbol, max(price) as max_price, min(price) as min_price, sum(volume) as total from " + TABLE_NAME + " where date like '" + date.substring(0, 7) + "%' group by symbol;";
+            query = "select " + SYMBOL + ", max(" + PRICE + ") as max_price, min(" + PRICE + ") as min_price, sum(" + VOLUME + ")  as total " +
+                    "from " + TABLE_NAME + " where " + DATE + " like '" + date.substring(0, 7) + "%' group by " + SYMBOL + ";";
         }
         return query;
     }
@@ -138,13 +146,13 @@ public class Stock_info {
     public static String getClosingPriceForGivenDate(String day_or_month, String date) {
         String query = null;
         if (day_or_month.equals("day")) {
-            query = "select t1.symbol, t1.price as closing_price_day from " +
-                    "(select symbol, price from " + TABLE_NAME + " where date = (select max(date) from " + TABLE_NAME +
-                    " where date like '" + date + "%')) as t1 ;";
+            query = "select t1." + SYMBOL + ", t1." + PRICE + " as closing_price_day from " +
+                    "(select " + SYMBOL + ", " + PRICE + " from " + TABLE_NAME + " where " + DATE + " = (select max(" + DATE + ") from " + TABLE_NAME +
+                    " where " + DATE + " like '" + date + "%')) as t1 ;";
         } else if (day_or_month.equals("month")) {
-            query = "select t2.symbol, t2.price as closing_price_month from " +
-                    "(select symbol, price from " + TABLE_NAME + " where date = (select max(date) from " + TABLE_NAME +
-                    " where date like '" + date.substring(0, 7) + "%') ) as t2;";
+            query = "select t2." + SYMBOL + ", t2." + PRICE + " as closing_price_month from " +
+                    "(select " + SYMBOL + ", " + PRICE + " from " + TABLE_NAME + " where " + DATE + " = (select max(" + DATE + ") from " + TABLE_NAME +
+                    " where " + DATE + " like '" + date.substring(0, 7) + "%') ) as t2;";
         }
         return query;
     }
