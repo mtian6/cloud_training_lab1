@@ -74,7 +74,7 @@ public class Stock_info {
      * @param column_name
      * @return
      */
-    public static boolean hasColumn(ResultSet rs, String column_name) {
+    private static boolean hasColumn(ResultSet rs, String column_name) {
         try
         {
             rs.findColumn(column_name);
