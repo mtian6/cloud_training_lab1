@@ -3,7 +3,6 @@ import com.mysql.cj.xdevapi.JsonParser;
 import java.io.*;
 import java.net.URL;
 import java.sql.*;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.json.simple.JSONArray;
@@ -18,19 +17,12 @@ public class Main {
 
     private static Stock_info table = new Stock_info();
 
-    private static final String DATE = "2018-06-25";
+    private static String date = null;
 
 
     public static void main(String[] args) throws Exception{
 
         JSONArray stocks = getData(URL);
-//        System.out.println(stocks.get(0));  //each one is of type JSONObject
-//        System.out.println(stocks.get(1));
-//
-//        System.out.println(stocks.get(0).getClass().getSimpleName()); //prints JSONObject
-
-        //JSONObject stock = (JSONObject)stocks.get(0);
-        //System.out.println(stock.get("volume"));
 
         Statement stmt = null;
         Connection conn = null;
@@ -38,10 +30,12 @@ public class Main {
 
         try {
             conn = DBUtil.getConnection();
+            System.out.println("connection established...");
+
             stmt = conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
             DBUtil.createAndUseDatabase(stmt, DATABASE_NAME);
-            //DBUtil.createTable(stmt, table_name);
+            DBUtil.createTable(stmt, table_name);
 
         } catch (SQLException e) {
             DBUtil.processException(e);
@@ -49,19 +43,33 @@ public class Main {
             System.out.println(e);
         }
 
+        String query = table.getInsertionQuery(table_name, stocks);
+        DBUtil.insertToTable(stmt, query);
 
-        //DBUtil.insertToTable(stmt, table_name, stocks);
+        //Get user input for date
+        date = InputHelper.getDateInput("Enter a date (yyyy-MM-dd): ");
+        if (date == null) {
+            return;
+        }
+        System.out.println();
 
-        Map symbol_map = storeQueryResults(stmt);
-        for (Object key: symbol_map.keySet()) System.out.println(key + "-" + symbol_map.get(key)); // print stored key-value map
+        Map info_map = table.executeAndStoreQuery(stmt, date);
 
-        //processUserCommands(stmt);
+        //display result
+        table.displayResult(info_map);
 
         if (conn != null){
             conn.close();
+            System.out.println("connection closed");
         }
     }
 
+    /**
+     * Gets JSON data from a given URL and parses it into a JSONArray.
+     * @param url
+     * @return
+     * @throws Exception
+     */
     public static JSONArray getData(String url) throws Exception {
         URL oracle = new URL(url);
         BufferedReader jsonString = new BufferedReader(new InputStreamReader(oracle.openStream()));
@@ -72,46 +80,5 @@ public class Main {
         return stocks;
     }
 
-    public static Map storeQueryResults(Statement stmt) throws SQLException {
-        Map symbol_map = new HashMap();
-
-        String q1 = table.getMaxMinAndVolumeForGivenDate("all", DATE);
-        ResultSet rs1 = stmt.executeQuery(q1);
-        symbol_map = table.storeResults(rs1, "maxmin", symbol_map, DATE);
-
-        String q4 = table.getClosingPriceForGivenDate("all", DATE);
-        ResultSet rs4 = stmt.executeQuery(q4);
-        symbol_map = table.storeResults(rs4, "closing", symbol_map, DATE);
-
-        return symbol_map;
-    }
-
-    public static void processUserCommands(Statement stmt) {
-        try {
-            String method = InputHelper.getInput("For a given date, do you want to find\n" +
-                    "(maxmin) max and min stock price\n" +
-                    "(closing) closing price?\n");
-            String name = InputHelper.getInput("Enter stock symbol (or 'all'): ");
-            String date = InputHelper.getInput("Enter a date (yyyy-mm-dd): ");
-
-            String q = null;
-            if (method.equals("maxmin")){
-                q = table.getMaxMinAndVolumeForGivenDate(name, date);
-            } else if (method.equals("closing")) {
-                q = table.getClosingPriceForGivenDate(name, date);
-            }
-            else {
-                System.out.println("Invalid input");
-            }
-
-            if (q != null) {
-                ResultSet result = stmt.executeQuery(q);
-                table.displayData(result);
-            }
-
-        } catch (Exception e) {
-            System.err.println("Invalid input: " + e);
-        }
-    }
 
 }
