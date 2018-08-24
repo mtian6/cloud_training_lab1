@@ -114,7 +114,7 @@ public class Stock_info {
     }
 
     /**
-     * Gets the sql query string that finds the maximum, minimum, and total volume of trades of each stock from either a given day or a month.
+     * Creates the sql query string that finds the maximum, minimum, and total volume of trades of each stock from either a given day or a month.
      * @param day_or_month Either "day" or "month".
      * @param date
      * @return
@@ -130,7 +130,7 @@ public class Stock_info {
     }
 
     /**
-     * Gets the sql query string that finds the closing price of each stock from either a given day or a month.
+     * Creates the sql query string that finds the closing price of each stock from either a given day or a month.
      * @param day_or_month Either "day" or "month".
      * @param date
      * @return
@@ -150,7 +150,7 @@ public class Stock_info {
     }
 
     /**
-     * Executes the sql query commands and stores it in the return value as a Map.
+     * Executes the sql queries and stores it in the return value as a Map.
      * @param stmt
      * @param date
      * @return
